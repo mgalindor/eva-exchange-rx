@@ -1,0 +1,66 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.5'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    //id 'com.gorylenko.gradle-git-properties' version '2.4.0'
+    id "com.palantir.docker" version "0.22.1"
+    id 'java'
+}
+
+group = 'com.mk'
+version = '1.0.0'
+sourceCompatibility = "17"
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('springCloudVersion', "2021.0.4")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'
+    implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    implementation 'io.vavr:vavr:0.10.4'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.zalando:jackson-datatype-money:1.3.0'
+
+    compileOnly 'org.projectlombok:lombok'
+
+    annotationProcessor 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+jar {
+    // This skip the plain jar
+    enabled = false
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+docker {
+    name "${project.group}/${project.name}:${project.version}"
+    files "$buildDir/libs/${project.name}-${project.version}.jar"
+    dockerfile file("$projectDir/Dockerfile")
+}
